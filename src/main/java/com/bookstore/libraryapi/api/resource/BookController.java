@@ -9,6 +9,9 @@ import com.bookstore.libraryapi.service.BookService;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindingResult;
@@ -17,6 +20,9 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/books")
@@ -49,6 +55,22 @@ public class BookController {
     public void deleteBook(@PathVariable Long id) {
         Book book = bookService.getById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         bookService.delete(book);
+    }
+
+    @PutMapping("{id}")
+    public BookDto updateBook(@PathVariable Long id,  BookDto dto) {
+       return bookService.getById(id).map(book -> {
+            book.setAuthor(dto.getAuthor());
+            book.setTitle(dto.getTitle());
+            book = bookService.update(book);
+            return modelMapper.map(book, BookDto.class);
+        }).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    }
+
+    @GetMapping
+    public Page<BookDto> find(BookDto dto, Pageable pageRequest) {
+        Book filter = modelMapper.map(dto, Book.class);
+        return bookService.find(filter, pageRequest).map(entity -> modelMapper.map(entity, BookDto.class));
     }
 
 

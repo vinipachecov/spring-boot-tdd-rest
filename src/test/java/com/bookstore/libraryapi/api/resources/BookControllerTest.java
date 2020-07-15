@@ -9,14 +9,18 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.BDDMockito;
-import org.mockito.Matchers;
 import org.mockito.Mockito;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.data.web.SpringDataWebProperties;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
@@ -25,9 +29,10 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import javax.swing.text.html.Option;
 
+import java.util.Arrays;
 import java.util.Optional;
 
-import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
@@ -91,7 +96,7 @@ public class BookControllerTest {
 
         String json = new ObjectMapper().writeValueAsString(dto);
 
-        MockHttpServletRequestBuilder request = MockMvcRequestBuilders.post(BOOK_API)
+        MockHttpServletRequestBuilder request =    MockMvcRequestBuilders.post(BOOK_API)
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
                 .content(json);
@@ -144,7 +149,7 @@ public class BookControllerTest {
     @DisplayName("should delete a book")
     public void deleteBookTest() throws Exception {
 //        cenario
-        BDDMockito.given(bookService.getById(Matchers.anyLong())).willReturn(Optional.of(Book.builder().id(1l).build()));
+        BDDMockito.given(bookService.getById(Mockito.anyLong())).willReturn(Optional.of(Book.builder().id(1l).build()));
 
 //        execução
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders.delete(BOOK_API.concat(("/" + 1)));
@@ -158,7 +163,7 @@ public class BookControllerTest {
     @DisplayName("should throw NotFound exception when book is not found to delete")
     public void deleteBookNotFoundTest() throws Exception {
 //        cenario
-        BDDMockito.given(bookService.getById(Matchers.anyLong())).willReturn(Optional.empty());
+        BDDMockito.given(bookService.getById(Mockito.anyLong())).willReturn(Optional.empty());
 
 //        execução
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders.delete(BOOK_API.concat(("/" + 1)));
@@ -166,5 +171,68 @@ public class BookControllerTest {
 //        verificação
         mvc.perform(request)
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("should update book when provided id is valid")
+    public void updateBookTest() throws Exception {
+        //        cenario
+        long id = 1l;
+        String json = new ObjectMapper().writeValueAsString(createBookDto());
+        Book updatingBook = Book.builder().id(1l).title("another-valid-title").author("another-valid-author").isbn("valid-isbn").build();
+        BDDMockito.given(bookService.getById(id)).willReturn(Optional.of(updatingBook));
+        Book updatedBook = Book.builder().id(id).title("updated-valid-title").author("updated-valid-author").isbn("valid-isbn").build();
+        BDDMockito.given(bookService.update(updatingBook)).willReturn(updatedBook);
+
+//        execução
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders.put(BOOK_API.concat(("/" + id))).contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(json);
+
+//        verificação
+        mvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("id").isNotEmpty())
+                .andExpect(jsonPath("title").value(updatedBook.getTitle()))
+                .andExpect(jsonPath("author").value(updatedBook.getAuthor()))
+                .andExpect(jsonPath("isbn").value(updatedBook.getIsbn()));
+    }
+
+    @Test
+    @DisplayName("should throw NotFound exception when book is not found to delete")
+    public void updateNotFoundBookTest() throws Exception {
+//        cenario
+        BDDMockito.given(bookService.getById(Mockito.anyLong())).willReturn(Optional.empty());
+
+//        execução
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders.put(BOOK_API.concat(("/" + 1)));
+
+//        verificação
+        mvc.perform(request)
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("should filter books")
+    public void findBookTest() throws Exception {
+        Long id = 1l;
+        Book book = Book.builder().id(id).title(createBookDto().getTitle()).author(createBookDto().getAuthor())
+                .isbn(createBookDto().getIsbn()).build();
+
+        BDDMockito.given( bookService.find(Mockito.any(Book.class), Mockito.any(Pageable.class)))
+                .willReturn(new PageImpl<Book>(Arrays.asList(book), PageRequest.of(0, 100), 1));
+
+        String queryString = String.format("?title=%s&author=%s&page=0&size=100", book.getTitle(), book.getAuthor());
+
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders.get(BOOK_API.concat(queryString))
+                .accept(MediaType.APPLICATION_JSON);
+
+        mvc
+                .perform(request)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("content", hasSize(1)))
+                .andExpect(jsonPath("totalElements").value(1))
+                .andExpect(jsonPath("pageable.pageSize").value((100)))
+                .andExpect(jsonPath("pageable.pageNumber").value(0));
     }
 }
