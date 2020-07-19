@@ -179,5 +179,20 @@ public class BookServiceTest {
 
     }
 
+    @Test
+    @DisplayName("Should return a book by isbn")
+    public void getBookByIsbnTest() {
+        String isbn = createValidBook().getIsbn();
+
+        when(repository.findByIsbn(anyString())).thenReturn(Optional.of(createValidBook()));
+
+        Optional<Book> book = service.getByIsbn(isbn);
+        assertThat(book.isPresent()).isTrue();
+        assertThat(book.get().getId()).isEqualTo(createValidBook().getId());
+        assertThat(book.get().getIsbn()).isEqualTo(createValidBook().getIsbn());
+
+        verify(repository, times(1)).findByIsbn(isbn);
+    }
+
 }
 
