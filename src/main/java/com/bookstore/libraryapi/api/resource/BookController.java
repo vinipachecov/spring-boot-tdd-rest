@@ -73,16 +73,4 @@ public class BookController {
         return bookService.find(filter, pageRequest).map(entity -> modelMapper.map(entity, BookDto.class));
     }
 
-
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiErrors handleValidationException(HttpMessageNotReadableException ex) {
-        return new ApiErrors(ex.getMessage());
-    }
-
-    @ExceptionHandler(BusinessException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiErrors handleBusinessException(BusinessException ex) {
-        return new ApiErrors(ex.getMessage());
-    }
 }
