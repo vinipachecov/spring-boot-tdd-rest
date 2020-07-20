@@ -10,10 +10,13 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import javax.swing.text.html.Option;
 import java.time.LocalDate;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -37,16 +40,8 @@ public class LoanServiceTest {
     @Test
     @DisplayName("shoul save a loan")
     public void saveLoanTest() {
-        String customer = "valid-customer";
-        Long bookId = 1L;
-        Loan savingLoan = Loan.builder().book(Book.builder().id(bookId).build())
-                .customer(customer)
-                .loanDate(LocalDate.now())
-                .build();
-        Loan savedLoan = Loan.builder().book(Book.builder().id(bookId).build())
-                .customer(customer)
-                .loanDate(LocalDate.now())
-                .build();
+        Loan savingLoan = createValidLoan();
+        Loan savedLoan = createValidLoan();
 
         when (repository.existsByBookAndNotReturned(savingLoan.getBook())).thenReturn(false);
         when(repository.save(savingLoan)).thenReturn(savedLoan);
@@ -59,15 +54,20 @@ public class LoanServiceTest {
 
     }
 
-    @Test
-    @DisplayName("should return business error when saving loan with book already in use")
-    public void saveLoanWithBookAlreadyInUseTest() {
+    private Loan createValidLoan() {
         String customer = "valid-customer";
         Long bookId = 1L;
-        Loan savingLoan = Loan.builder().book(Book.builder().id(bookId).build())
+        return Loan.builder().book(Book.builder().id(bookId).build())
                 .customer(customer)
                 .loanDate(LocalDate.now())
                 .build();
+    }
+
+    @Test
+    @DisplayName("should return business error when saving loan with book already in use")
+    public void saveLoanWithBookAlreadyInUseTest() {
+
+        Loan savingLoan = createValidLoan();
 
         when (repository.existsByBookAndNotReturned(savingLoan.getBook())).thenReturn(true);
         Throwable exception = catchThrowable(() -> service.save(savingLoan));
@@ -76,5 +76,27 @@ public class LoanServiceTest {
                 .hasMessage("Book already in use");
 
         verify(repository, never()).save(savingLoan);
+    }
+
+    @Test
+    @DisplayName("should get information of a loan by id")
+    public void getLoanDetailsTest() {
+//        case
+        Long id = 1L;
+        Loan loan = createValidLoan();
+
+        loan.setId(1L);
+
+        Mockito.when(repository.findById(id)).thenReturn(Optional.of(loan));
+
+        Optional<Loan> result = service.getById(id);
+
+        assertThat(result.isPresent()).isTrue();
+        assertThat(result.get().getId()).isEqualTo(id);
+        assertThat(result.get().getCustomer()).isEqualTo(loan.getCustomer());
+        assertThat(result.get().getBook()).isEqualTo(loan.getBook());
+        assertThat(result.get().getLoanDate()).isEqualTo(loan.getLoanDate());
+
+        verify(repository).findById(id);
     }
 }
