@@ -99,4 +99,20 @@ public class LoanServiceTest {
 
         verify(repository).findById(id);
     }
+
+    @Test
+    @DisplayName("should update a valid loan")
+    public void updateLoanTest() {
+//        case
+        Loan loan = createValidLoan();
+        loan.setId(1L);
+        loan.setReturned(true);
+
+        when(repository.save(loan)).thenReturn(loan);
+
+        Loan updatedLoan = service.update(loan);
+
+        assertThat(updatedLoan.getReturned()).isTrue();
+        verify(repository).save(loan);
+    }
 }
