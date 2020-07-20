@@ -6,6 +6,8 @@ import com.bookstore.libraryapi.model.repository.LoanRepository;
 import com.bookstore.libraryapi.service.LoanService;
 import lombok.AllArgsConstructor;
 
+import java.util.Optional;
+
 @AllArgsConstructor
 public class LoanServiceImpl implements LoanService {
 
@@ -17,5 +19,15 @@ public class LoanServiceImpl implements LoanService {
             throw new BusinessException("Book already in use");
         }
         return repository.save(loan);
+    }
+
+    @Override
+    public Optional<Loan> getById(Long id) {
+        return Optional.empty();
+    }
+
+    @Override
+    public Loan update(Loan loan) {
+        return null;
     }
 }
