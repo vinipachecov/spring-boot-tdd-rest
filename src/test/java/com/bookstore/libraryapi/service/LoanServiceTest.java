@@ -54,10 +54,10 @@ public class LoanServiceTest {
 
     }
 
-    private Loan createValidLoan() {
+  public static Loan createValidLoan() {
         String customer = "valid-customer";
         Long bookId = 1L;
-        return Loan.builder().book(Book.builder().id(bookId).build())
+        return Loan.builder().book(Book.builder().author("valid-author").isbn("valid-isbn").title("valid-title").id(bookId).build())
                 .customer(customer)
                 .loanDate(LocalDate.now())
                 .build();
