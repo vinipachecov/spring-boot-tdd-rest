@@ -1,5 +1,6 @@
 package com.bookstore.libraryapi.service;
 
+import com.bookstore.libraryapi.api.dto.LoanFilterDTO;
 import com.bookstore.libraryapi.exception.BusinessException;
 import com.bookstore.libraryapi.model.entity.Book;
 import com.bookstore.libraryapi.model.entity.Loan;
@@ -11,11 +12,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.springframework.data.domain.*;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import javax.swing.text.html.Option;
 import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -114,5 +118,28 @@ public class LoanServiceTest {
 
         assertThat(updatedLoan.getReturned()).isTrue();
         verify(repository).save(loan);
+    }
+
+
+    @Test
+    @DisplayName("Should filter loan by properties")
+    public void findLoanTest() {
+        Loan loan = createValidLoan();
+        LoanFilterDTO loanFilterDTO = LoanFilterDTO.builder().customer(loan.getCustomer()).isbn("valid-isbn").build();
+        PageRequest pageRequest = PageRequest.of(0, 10);
+        List<Loan> list = Arrays.asList(loan);
+        Page<Loan> page = new PageImpl<Loan>(list,pageRequest, list.size());
+
+        Mockito.when(repository.findByBookIsbnOrCustomer(Mockito.anyString(), Mockito.anyString(), Mockito.any(Pageable.class)))
+                .thenReturn(page);
+//      run
+        Page<Loan> result = service.find(loanFilterDTO, pageRequest);
+
+//      verify
+        assertThat(result.getTotalElements()).isEqualTo(list.size());
+        assertThat(result.getContent()).isEqualTo(list);
+        assertThat(result.getPageable().getPageNumber()).isEqualTo(pageRequest.getPageNumber());
+        assertThat(result.getPageable().getPageSize()).isEqualTo(pageRequest.getPageSize());
+
     }
 }
