@@ -72,6 +72,10 @@
             <artifactId>hibernate-core</artifactId>
             <version>5.4.17.Final</version>
         </dependency>
+        <dependency>
+            <groupId>javax.validation</groupId>
+            <artifactId>validation-api</artifactId>
+        </dependency>
     </dependencies>
 
 	<build>

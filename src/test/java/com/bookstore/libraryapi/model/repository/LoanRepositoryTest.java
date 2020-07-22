@@ -14,6 +14,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import javax.persistence.EntityManager;
 import java.time.LocalDate;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -61,5 +62,32 @@ public class LoanRepositoryTest {
          assertThat(result.getPageable().getPageSize()).isEqualTo(10);
          assertThat(result.getPageable().getPageNumber()).isEqualTo(0);
         assertThat(result.getTotalElements()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("should retrieve loans where loans data is three days late and not returned")
+    public void findByLoanDateThreeDaysLateTest() {
+        Book book = createValidBook();
+        entityMananger.persist(book);
+        Loan loan = Loan.builder().book(book).customer("valid-customer").loanDate(LocalDate.now()).build();
+        loan.setLoanDate(LocalDate.now().minusDays(5));
+        entityMananger.persist(loan);
+
+        List<Loan> result = repository.findByLoanDateLessThanAndNotReturned(LocalDate.now().minusDays(4));
+
+        assertThat(result).hasSize(1).contains(loan);
+    }
+
+    @Test
+    @DisplayName("should return empty array of loans when non late ")
+    public void notFindByLoanDateThreeDaysLateTest() {
+        Book book = createValidBook();
+        entityMananger.persist(book);
+        Loan loan = Loan.builder().book(book).customer("valid-customer").loanDate(LocalDate.now()).build();
+        entityMananger.persist(loan);
+
+        List<Loan> result = repository.findByLoanDateLessThanAndNotReturned(LocalDate.now().minusDays(4));
+
+        assertThat(result).isEmpty();
     }
 }

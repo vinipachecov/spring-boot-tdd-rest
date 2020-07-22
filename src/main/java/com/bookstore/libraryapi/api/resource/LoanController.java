@@ -10,6 +10,7 @@ import com.bookstore.libraryapi.service.BookService;
 import com.bookstore.libraryapi.service.LoanService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -27,8 +28,13 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class LoanController {
 
+    @Autowired
     private final LoanService loanService;
+
+    @Autowired
     private final BookService bookService;
+
+    @Autowired
     private final ModelMapper modelMapper;
 
     @PostMapping

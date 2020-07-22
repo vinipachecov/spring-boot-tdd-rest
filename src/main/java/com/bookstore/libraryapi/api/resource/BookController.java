@@ -10,6 +10,7 @@ import com.bookstore.libraryapi.model.entity.Loan;
 import com.bookstore.libraryapi.service.BookService;
 
 import com.bookstore.libraryapi.service.LoanService;
+import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -32,13 +33,13 @@ import java.util.stream.Collectors;
 public class BookController {
 
     @Autowired
-    BookService bookService;
+    private BookService bookService;
 
     @Autowired
-    ModelMapper modelMapper;
+    private  ModelMapper modelMapper;
 
     @Autowired
-    LoanService loanService;
+    private LoanService loanService;
 
     @PostMapping()
     @ResponseStatus(HttpStatus.CREATED)

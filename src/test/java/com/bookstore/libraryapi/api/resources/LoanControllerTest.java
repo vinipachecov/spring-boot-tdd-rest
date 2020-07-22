@@ -61,7 +61,7 @@ public class LoanControllerTest {
     LoanService loanService;
 
     private LoanDto createValidLoanDto() {
-        return new LoanDto().builder().isbn("valid-isbn").customer("valid-customer").build();
+        return new LoanDto().builder().email("mail@email.com").isbn("valid-isbn").customer("valid-customer").build();
     }
 
     @Test
@@ -121,7 +121,7 @@ public class LoanControllerTest {
         mvc.perform(request)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("errors", Matchers.hasSize(1)))
-                .andExpect(jsonPath("errors[0]").value("Book note found for passed isbn"));
+                .andExpect(jsonPath("errors[0]").value("Book not found for passed isbn"));
     }
 
     @Test
