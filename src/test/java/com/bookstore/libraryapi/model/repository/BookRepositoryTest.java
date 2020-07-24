@@ -27,6 +27,7 @@ public class BookRepositoryTest {
     @Autowired
     BookRepository repository;
 
+
     private Book createValidBook() {
         return Book.builder().isbn("valid-isbn").author("valid-author").title("valid-title").build();
     }
