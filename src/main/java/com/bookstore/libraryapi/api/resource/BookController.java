@@ -15,6 +15,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -35,6 +36,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/books")
 @Api("Book API")
+@Slf4j
 public class BookController {
 
     @Autowired
@@ -50,6 +52,7 @@ public class BookController {
     @ResponseStatus(HttpStatus.CREATED)
     @ApiOperation("Creates a new book")
     public BookDto createBook(@RequestBody @Validated BookDto bookDto) {
+        log.info("creating a book for isbn {}", bookDto.getIsbn());
         BookDto returnValue;
         Book entity = modelMapper.map(bookDto, Book.class);
         entity = bookService.save(entity);
@@ -60,6 +63,7 @@ public class BookController {
     @GetMapping("{id}")
     @ApiOperation("Retrieves a book by book ID.")
     public BookDto getBook(@PathVariable Long id) {
+        log.info("fetching book with id {}", id);
         return bookService.getById(id).map( book -> modelMapper.map(book, BookDto.class))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
@@ -71,6 +75,7 @@ public class BookController {
             @ApiResponse(code = 204, message = "Book successfuly deleted")
     )
     public void deleteBook(@PathVariable Long id) {
+        log.info("deleting book with id {}", id);
         Book book = bookService.getById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         bookService.delete(book);
     }
@@ -78,6 +83,7 @@ public class BookController {
     @PutMapping("{id}")
     @ApiOperation("Update a book by book ID.")
     public BookDto updateBook(@PathVariable Long id,  BookDto dto) {
+        log.info("updating book with id {}", id);
        return bookService.getById(id).map(book -> {
             book.setAuthor(dto.getAuthor());
             book.setTitle(dto.getTitle());
